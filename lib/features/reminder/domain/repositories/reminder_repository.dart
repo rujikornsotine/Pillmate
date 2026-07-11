@@ -1,0 +1,29 @@
+import '../../../../core/utils/result.dart';
+import '../../../medication/domain/entities/medication.dart';
+import '../entities/schedule.dart';
+
+/// Contract ของ Reminder Repository ให้ Domain Layer สั่งจัดการแจ้งเตือนได้
+/// โดยไม่รู้จัก flutter_local_notifications โดยตรง
+abstract class ReminderRepository {
+  /// ขอสิทธิ์การแจ้งเตือนจากผู้ใช้งาน
+  Future<Result<bool>> requestPermission();
+
+  /// ยกเลิกการแจ้งเตือนทั้งหมดที่ตั้งเวลาไว้
+  Future<Result<void>> cancelAllReminders();
+
+  /// ยกเลิกการแจ้งเตือนของมื้อยาหนึ่งมื้อ ใช้เมื่อผู้ใช้ยืนยันการทานยามื้อนั้นเองแล้ว
+  Future<Result<void>> cancelDoseReminder({
+    required String medicationId,
+    required DateTime occurrence,
+  });
+
+  /// ตั้งเวลาแจ้งเตือนทุกมื้อของตารางยาหนึ่งรายการ ภายในหน้าต่างเวลาที่กำหนดไว้
+  ///
+  /// [takenDoseKeys] คือชุดคีย์ของมื้อที่ผู้ใช้ยืนยันการทานไปแล้ว (จาก
+  /// [ScheduleOccurrenceCalculator.doseKey]) มื้อเหล่านี้จะถูกข้าม ไม่ตั้งแจ้งเตือนซ้ำ
+  Future<Result<void>> scheduleReminders({
+    required Schedule schedule,
+    required Medication medication,
+    Set<String> takenDoseKeys,
+  });
+}
