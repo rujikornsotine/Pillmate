@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/status_badge.dart';
 import '../../../history/domain/entities/medication_history.dart';
 import '../../domain/entities/medication_dose.dart';
 
@@ -81,13 +82,9 @@ class DoseCard extends StatelessWidget {
 
   Widget _buildTrailing(ThemeData theme) {
     if (dose.isTaken) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.check_circle, color: Colors.green, size: 20),
-          const SizedBox(width: 4),
-          Text('ทานแล้ว', style: TextStyle(color: Colors.green)),
-        ],
+      return const StatusBadge(
+        label: 'ทานแล้ว',
+        variant: StatusBadgeVariant.success,
       );
     }
 
