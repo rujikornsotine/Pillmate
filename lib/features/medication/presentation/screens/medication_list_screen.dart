@@ -65,9 +65,10 @@ class MedicationListScreen extends ConsumerWidget {
           }
           return RefreshIndicator(
             onRefresh: () => ref.read(medicationListProvider.notifier).refresh(),
-            child: ListView.builder(
+            child: ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: medications.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final medication = medications[index];
                 return MedicationCard(
