@@ -53,21 +53,7 @@ class MedicationListScreen extends ConsumerWidget {
     final medicationsAsync = ref.watch(medicationListProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('รายการยาของฉัน'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.today_outlined),
-            tooltip: 'ยาวันนี้',
-            onPressed: () => context.push('/today'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.history_outlined),
-            tooltip: 'ประวัติการทานยา',
-            onPressed: () => context.push('/history'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('รายการยาของฉัน')),
       body: medicationsAsync.when(
         data: (medications) {
           if (medications.isEmpty) {
