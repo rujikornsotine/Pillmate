@@ -9,6 +9,9 @@ class AppTheme {
   /// สีแบรนด์หลัก (น้ำเงิน) ใช้กับ header, ปุ่มหลัก และแท็บที่เลือก
   static const Color brandBlue = Color(0xFF2B7FFF);
 
+  /// สีน้ำเงินเข้มกว่า brandBlue ใช้เป็นปลายไล่เฉดของ GradientAppHeader
+  static const Color brandBlueDark = Color(0xFF1857D6);
+
   static ThemeData light() {
     final colorScheme =
         ColorScheme.fromSeed(
