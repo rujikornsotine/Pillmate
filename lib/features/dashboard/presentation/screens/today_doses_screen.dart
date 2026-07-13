@@ -66,9 +66,10 @@ class _TodayDosesScreenState extends ConsumerState<TodayDosesScreen> {
           }
           return RefreshIndicator(
             onRefresh: () => ref.read(todayDosesProvider.notifier).refresh(),
-            child: ListView.builder(
+            child: ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: doses.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final dose = doses[index];
                 return DoseCard(

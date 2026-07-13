@@ -71,9 +71,10 @@ class ScheduleListScreen extends ConsumerWidget {
           }
           return RefreshIndicator(
             onRefresh: () => ref.read(scheduleListProvider.notifier).refresh(),
-            child: ListView.builder(
+            child: ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: schedules.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final schedule = schedules[index];
                 return ScheduleCard(

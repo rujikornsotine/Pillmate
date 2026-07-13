@@ -75,9 +75,11 @@ class _MedicationHistoryScreenState
                 return RefreshIndicator(
                   onRefresh: () =>
                       ref.read(medicationHistoryListProvider.notifier).refresh(),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(12),
                     itemCount: filtered.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) =>
                         MedicationHistoryCard(history: filtered[index]),
                   ),
