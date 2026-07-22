@@ -272,20 +272,23 @@ chore:
 - ✅ Mark As Taken
 - ✅ Follow-up Notification (เตือนซ้ำใน 15 นาทีถ้ายังไม่ยืนยัน)
 - ✅ ยืนยันผ่าน Popup เมื่อแตะที่การแจ้งเตือน
+- ✅ จัดการสิทธิ์ Android 14+ (ตรวจสิทธิ์ก่อนตั้ง, ถอยไปใช้ inexact alarm,
+  ขอสิทธิ์แบบมีคำอธิบายผ่าน ReminderPermissionBanner, re-sync ตอนกลับเข้าแอป)
 - ⬜ แสดงรูปภาพยาใน Notification
 
 ### History
 
 - ✅ บันทึกสถานะ taken / snoozed / skipped
-- ✅ Daily History (ตัวกรอง "วันนี้")
+- ✅ Daily History (ตัวกรอง "วันนี้" เป็นค่าเริ่มต้น)
 - ✅ Monthly History (ตัวกรอง "เดือนนี้")
 - ✅ Search History (ค้นหาตามชื่อยา)
+- ✅ การ์ดสรุปตามตัวกรอง (ทานแล้ว / เลื่อน / ข้าม)
 
 ### Dashboard
 
 - ✅ Today's Medication (หน้า "ยาวันนี้" + ยืนยันการทานเอง)
+- ✅ Daily Summary (การ์ดความคืบหน้า ทานแล้ว / เลื่อน / รอทาน)
 - ⬜ Next Reminder
-- ⬜ Daily Summary
 
 ---
 
