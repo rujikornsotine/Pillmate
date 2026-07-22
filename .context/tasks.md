@@ -2,7 +2,7 @@
 
 Status: MVP
 
-อัปเดตล่าสุด: 22 กรกฎาคม 2026
+อัปเดตล่าสุด: 22 กรกฎาคม 2026 (หลัง merge PR #3, #4, #5, #6)
 
 สัญลักษณ์สถานะ
 
@@ -339,7 +339,26 @@ Notification Permission
 Priority: P0
 
 - ✅ `RequestNotificationPermissionUseCase` เรียกตอนเปิดแอป
-- ✅ Android manifest: `SCHEDULE_EXACT_ALARM`, `RECEIVE_BOOT_COMPLETED`, `CAMERA`
+- ✅ Android manifest: `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`,
+  `RECEIVE_BOOT_COMPLETED`, `CAMERA`
+
+---
+
+## TASK-407 ✅
+
+Exact Alarm Permission (Android 14+)
+
+Priority: P0
+
+Android 14 (API 34) เลิกอนุญาต `SCHEDULE_EXACT_ALARM` ให้อัตโนมัติ ทำให้การแจ้งเตือน
+ล้มเหลวทั้งหมดแบบเงียบๆ บนเครื่องรุ่นใหม่
+
+- ✅ `ReminderPermissionStatus` (entity) แยกสิทธิ์แจ้งเตือนกับสิทธิ์ปลุกตรงเวลา
+- ✅ `GetReminderPermissionStatusUseCase` + `RequestExactAlarmPermissionUseCase`
+- ✅ ตรวจ `canScheduleExactAlarms()` ก่อนตั้ง แล้วถอยไปใช้ `inexactAllowWhileIdle`
+- ✅ `ReminderPermissionBanner` อธิบายเหตุผลก่อนพาผู้ใช้ไปหน้าตั้งค่า
+- ✅ re-sync การแจ้งเตือนตอนแอปกลับมา foreground
+- ✅ เลิกกลืน error ทุกชั้น + แสดง SnackBar เมื่อ sync ไม่สำเร็จ
 
 ---
 
@@ -404,7 +423,8 @@ Daily History Filter
 
 Priority: P1
 
-- ✅ `HistoryPeriodFilter.today`
+- ✅ `HistoryPeriodFilter.today` และตั้งเป็นค่าเริ่มต้นของหน้าประวัติ พร้อมข้อความ
+  Empty State ที่สอดคล้องกับตัวกรองที่เลือกอยู่
 
 ---
 
@@ -452,7 +472,7 @@ Deliverables
 
 ---
 
-## TASK-604 ⬜
+## TASK-604 ✅
 
 Daily Summary Card
 
@@ -460,8 +480,9 @@ Priority: P1
 
 Deliverables
 
-- ⬜ จำนวนมื้อที่ทานแล้ว / ยังไม่ทาน
-- ⬜ สถานะการรับประทานยาประจำวัน
+- ✅ จำนวนมื้อที่ทานแล้ว / เลื่อน / รอทาน (การ์ดความคืบหน้าในหน้า "ยาวันนี้")
+- ✅ สถานะการรับประทานยาประจำวัน
+- ✅ การ์ดสรุปตามตัวกรองในหน้าประวัติ (ทานแล้ว / เลื่อน / ข้าม)
 
 ---
 
@@ -594,7 +615,7 @@ Milestone 2 ✅
 Milestone 3 ⚠️
 
 - Medication History ✅
-- Dashboard ⚠️ (เหลือ TASK-603, TASK-604)
+- Dashboard ⚠️ (เหลือ TASK-603 การ์ดเวลาทานยาถัดไป)
 
 Milestone 4 ⚠️
 
