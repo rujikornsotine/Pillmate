@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/status_badge.dart';
 import '../../domain/entities/medication_history.dart';
 
 /// การ์ดแสดงประวัติการทานยาหนึ่งรายการ
@@ -8,26 +9,29 @@ class MedicationHistoryCard extends StatelessWidget {
 
   final MedicationHistory history;
 
-  ({IconData icon, Color Function(ColorScheme) color, String label})
+  ({IconData icon, Color color, String label, StatusBadgeVariant variant})
   get _statusInfo {
     switch (history.status) {
       case IntakeStatus.taken:
         return (
           icon: Icons.check_circle_outline,
-          color: (scheme) => Colors.green,
+          color: Colors.green,
           label: 'ทานแล้ว',
+          variant: StatusBadgeVariant.success,
         );
       case IntakeStatus.snoozed:
         return (
           icon: Icons.snooze_outlined,
-          color: (scheme) => Colors.orange,
-          label: 'เลื่อนการทาน',
+          color: Colors.orange,
+          label: 'เลื่อน',
+          variant: StatusBadgeVariant.warning,
         );
       case IntakeStatus.skipped:
         return (
           icon: Icons.cancel_outlined,
-          color: (scheme) => scheme.error,
-          label: 'ข้ามการทาน',
+          color: Colors.red,
+          label: 'ข้าม',
+          variant: StatusBadgeVariant.danger,
         );
     }
   }
@@ -40,23 +44,19 @@ class MedicationHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final statusInfo = _statusInfo;
-    final statusColor = statusInfo.color(theme.colorScheme);
 
     return Card(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: statusColor.withValues(alpha: 0.15),
-          child: Icon(statusInfo.icon, color: statusColor),
+          backgroundColor: statusInfo.color.withValues(alpha: 0.15),
+          child: Icon(statusInfo.icon, color: statusInfo.color),
         ),
         title: Text(history.medicationName),
         subtitle: Text('กำหนดทาน ${_formatDateTime(history.scheduledAt)}'),
-        trailing: Chip(
-          label: Text(statusInfo.label),
-          labelStyle: TextStyle(color: statusColor),
-          backgroundColor: statusColor.withValues(alpha: 0.1),
-          side: BorderSide.none,
+        trailing: StatusBadge(
+          label: statusInfo.label,
+          variant: statusInfo.variant,
         ),
       ),
     );
