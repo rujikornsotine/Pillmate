@@ -19,7 +19,8 @@ class MedicationHistoryScreen extends ConsumerStatefulWidget {
 
 class _MedicationHistoryScreenState
     extends ConsumerState<MedicationHistoryScreen> {
-  HistoryPeriodFilter _period = HistoryPeriodFilter.all;
+  /// ค่าเริ่มต้นเป็น "วันนี้" เพราะผู้ใช้ส่วนใหญ่เปิดหน้านี้เพื่อดูว่าวันนี้ทานยาครบหรือยัง
+  HistoryPeriodFilter _period = HistoryPeriodFilter.today;
   String _searchQuery = '';
 
   bool _matchesPeriod(MedicationHistory history) {
@@ -42,6 +43,22 @@ class _MedicationHistoryScreenState
     return history.medicationName.toLowerCase().contains(
       _searchQuery.trim().toLowerCase(),
     );
+  }
+
+  /// ข้อความ Empty State ให้สอดคล้องกับตัวกรองที่เลือกอยู่ กันผู้ใช้เข้าใจผิดว่าไม่มี
+  /// ประวัติเลย ทั้งที่จริงแค่ไม่มีรายการในช่วงเวลาที่กรองอยู่
+  String _emptyStateMessage() {
+    if (_searchQuery.trim().isNotEmpty) {
+      return 'ไม่พบยาที่ตรงกับคำค้นหาในช่วงเวลาที่เลือก';
+    }
+    return switch (_period) {
+      HistoryPeriodFilter.all =>
+        'ประวัติจะแสดงที่นี่เมื่อมีการยืนยันการทานยา',
+      HistoryPeriodFilter.today =>
+        'วันนี้ยังไม่มีการบันทึกการทานยา เลือก "ทั้งหมด" เพื่อดูประวัติย้อนหลัง',
+      HistoryPeriodFilter.thisMonth =>
+        'เดือนนี้ยังไม่มีการบันทึกการทานยา เลือก "ทั้งหมด" เพื่อดูประวัติย้อนหลัง',
+    };
   }
 
   Widget _buildSummaryCard(List<MedicationHistory> filtered) {
@@ -135,10 +152,10 @@ class _MedicationHistoryScreenState
                     .toList();
 
                 if (filtered.isEmpty) {
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.history_outlined,
                     title: 'ไม่พบประวัติการทานยา',
-                    message: 'ประวัติจะแสดงที่นี่เมื่อมีการยืนยันการทานยา',
+                    message: _emptyStateMessage(),
                   );
                 }
 
