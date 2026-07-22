@@ -201,6 +201,23 @@ P1
 
 ---
 
+# MVP Status
+
+สถานะการพัฒนา ณ 22 กรกฎาคม 2026
+
+| Feature | Priority | สถานะ | คงเหลือ |
+|---|---|---|---|
+| Feature 1 — Medication Management | P0 | ✅ | — |
+| Feature 2 — Medication Image | P1 | ⚠️ | แสดงรูปยาใน Notification |
+| Feature 3 — Medication Schedule | P0 | ✅ | — (รองรับเพิ่ม: ทุก X วัน) |
+| Feature 4 — Reminder Notification | P0 | ✅ | — |
+| Feature 5 — Medication History | P0 | ✅ | — |
+| Feature 6 — Dashboard | P1 | ⚠️ | เวลาทานยาถัดไป, สรุปสถานะรายวัน |
+
+รายละเอียดระดับ Task ดูที่ `tasks.md` และระดับ Requirement ดูที่ `requirements.md`
+
+---
+
 # User Stories
 
 ## Medication

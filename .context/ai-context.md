@@ -67,7 +67,13 @@ Version Control
 
 CI/CD
 
-- GitHub Actions
+- Jenkins (Jenkinsfile ที่ root ของโปรเจกต์ รันบน Windows agent)
+
+Stage ของ Pipeline
+
+```text
+Environment → Dependencies → Analyze → Test → Build APK → Archive
+```
 
 ---
 
@@ -96,7 +102,6 @@ Data
 ```text
 core/
 features/
-l10n/
 ```
 
 ทุก Feature ต้องมี
@@ -106,6 +111,20 @@ data/
 domain/
 presentation/
 ```
+
+ยกเว้น Feature ที่อ่านข้อมูลอย่างเดียว (เช่น dashboard) ที่ใช้ Repository ของ Feature อื่น
+ผ่าน UseCase จึงไม่ต้องมี `data/`
+
+Feature ที่มีจริงในโค้ด
+
+```text
+medication
+reminder
+history
+dashboard
+```
+
+`l10n/` ยังไม่ถูกสร้าง ปัจจุบันข้อความ UI เป็นภาษาไทยแบบ hardcode
 
 ---
 
@@ -145,6 +164,9 @@ Variable Name
 setState()
 ```
 
+ยกเว้น local UI state ภายในหน้าจอเดียวที่ไม่กระทบ business logic เช่น สถานะปุ่มกำลังบันทึก
+กรณีนี้ใช้ `ConsumerStatefulWidget` + `setState()` ได้ (ดูตัวอย่างที่ `today_doses_screen.dart`)
+
 ---
 
 ## Database Rules
@@ -160,8 +182,20 @@ UseCase
  ↓
 Repository
  ↓
+LocalDataSource
+ ↓
 Hive
 ```
+
+Box ที่ใช้งานจริง
+
+```text
+medications    (typeId 0)
+schedules      (typeId 1)
+histories      (typeId 2)
+```
+
+Repository ทุกตัวคืนค่าเป็น `Result<T>` ห้ามโยน Exception ขึ้นไปถึง UI
 
 ---
 
@@ -211,36 +245,47 @@ chore:
 
 ## Feature List
 
+สถานะ: ✅ ทำแล้ว / ⬜ ยังไม่ทำ
+
 ### Medication
 
-- Add Medication
-- Edit Medication
-- Delete Medication
-- Medication Image
+- ✅ Add Medication
+- ✅ Edit Medication
+- ✅ Delete Medication
+- ✅ Medication Image (กล้อง + Gallery)
+- ⬜ Search Medication
 
 ### Schedule
 
-- Daily Schedule
-- Weekly Schedule
-- Custom Schedule
+`ScheduleFrequency` ที่รองรับ
+
+- ✅ daily — ทุกวัน
+- ✅ weekly — เฉพาะวันในสัปดาห์ที่เลือก
+- ✅ intervalHours — ทุก X ชั่วโมง
+- ✅ everyNDays — ทุก X วัน
+- ✅ หลายเวลาต่อวัน + ช่วงวันที่เริ่ม-สิ้นสุด + เปิด/ปิดใช้งานตาราง
 
 ### Reminder
 
-- Local Notification
-- Snooze
-- Mark As Taken
+- ✅ Local Notification
+- ✅ Snooze (เลื่อน 15 นาที)
+- ✅ Mark As Taken
+- ✅ Follow-up Notification (เตือนซ้ำใน 15 นาทีถ้ายังไม่ยืนยัน)
+- ✅ ยืนยันผ่าน Popup เมื่อแตะที่การแจ้งเตือน
+- ⬜ แสดงรูปภาพยาใน Notification
 
 ### History
 
-- Daily History
-- Monthly History
-- Search History
+- ✅ บันทึกสถานะ taken / snoozed / skipped
+- ✅ Daily History (ตัวกรอง "วันนี้")
+- ✅ Monthly History (ตัวกรอง "เดือนนี้")
+- ✅ Search History (ค้นหาตามชื่อยา)
 
 ### Dashboard
 
-- Today's Medication
-- Next Reminder
-- Daily Summary
+- ✅ Today's Medication (หน้า "ยาวันนี้" + ยืนยันการทานเอง)
+- ⬜ Next Reminder
+- ⬜ Daily Summary
 
 ---
 
@@ -255,7 +300,7 @@ chore:
 5. Comment ภาษาไทย
 6. Class และ Method ภาษาอังกฤษ
 7. สร้าง Unit Test เสมอ
-8. หลีกเลี่ยง StatefulWidget
+8. หลีกเลี่ยง StatefulWidget (ใช้ได้เฉพาะ local UI state ตามหัวข้อ State Management Rules)
 9. Reuse Component เดิมก่อนสร้างใหม่
 10. ห้ามแก้ไข Architecture ที่กำหนด
 11. ห้ามเพิ่ม Dependency ใหม่โดยไม่มีเหตุผล
