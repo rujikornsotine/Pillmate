@@ -11,6 +11,7 @@ import '../../features/reminder/domain/entities/schedule.dart';
 import '../../features/reminder/presentation/screens/add_schedule_screen.dart';
 import '../../features/reminder/presentation/screens/edit_schedule_screen.dart';
 import '../../features/reminder/presentation/screens/schedule_list_screen.dart';
+import '../../features/reminder/presentation/widgets/reminder_permission_banner.dart';
 import '../widgets/scaffold_with_nav_bar.dart';
 
 /// Navigator key ระดับแอป ใช้ push หน้าเต็มจอทับ bottom navigation และเปิด Dialog
@@ -27,8 +28,11 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   routes: [
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) =>
-          ScaffoldWithNavBar(navigationShell: navigationShell),
+      builder: (context, state, navigationShell) => ScaffoldWithNavBar(
+        navigationShell: navigationShell,
+        // แถบเตือนเรื่องสิทธิ์แจ้งเตือน ซ่อนตัวเองเมื่อสิทธิ์ครบแล้ว
+        banner: const ReminderPermissionBanner(),
+      ),
       branches: [
         // แท็บ 1: ยาของฉัน
         StatefulShellBranch(

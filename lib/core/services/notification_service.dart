@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -67,6 +67,9 @@ typedef ReminderActionEvent = ({ReminderPayload payload, String actionId});
 /// จัดการการแจ้งเตือนทานยาทั้งหมดผ่าน flutter_local_notifications
 /// ห้ามเรียก flutter_local_notifications จากที่อื่นนอกเหนือจาก Service นี้
 class NotificationService {
+  /// รหัส error ที่ปลั๊กอินโยนออกมาเมื่อสั่งปลุกตรงเวลาโดยที่ยังไม่ได้รับสิทธิ์
+  static const String _exactAlarmsNotPermittedCode = 'exact_alarms_not_permitted';
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
@@ -132,19 +135,18 @@ class NotificationService {
     _isInitialized = true;
   }
 
-  /// ขอสิทธิ์การแจ้งเตือนจากผู้ใช้งาน คืนค่า true ถ้าได้รับอนุญาตให้ส่งการแจ้งเตือน
+  /// ขอสิทธิ์แสดงการแจ้งเตือนจากผู้ใช้งาน คืนค่า true ถ้าได้รับอนุญาต
+  ///
+  /// ขอเฉพาะสิทธิ์แสดงการแจ้งเตือนเท่านั้น (เป็น dialog ในแอป) ไม่รวมสิทธิ์
+  /// การปลุกตรงเวลา เพราะสิทธิ์นั้นต้องพาผู้ใช้ออกไปหน้าตั้งค่าของระบบ
+  /// จึงต้องอธิบายเหตุผลก่อนแล้วให้ผู้ใช้กดเอง (ดู [requestExactAlarmsPermission])
   Future<bool> requestPermission() async {
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
     if (androidPlugin != null) {
-      final notificationsGranted =
-          await androidPlugin.requestNotificationsPermission() ?? false;
-      // ขอสิทธิ์ exact alarm แบบ best-effort เพื่อความแม่นยำของเวลาแจ้งเตือน
-      // ถ้าไม่ได้รับอนุญาตแอปยังใช้งานได้ แต่เวลาการแจ้งเตือนอาจคลาดเคลื่อน
-      await androidPlugin.requestExactAlarmsPermission();
-      return notificationsGranted;
+      return await androidPlugin.requestNotificationsPermission() ?? false;
     }
 
     final iosPlugin = _plugin
@@ -161,13 +163,66 @@ class NotificationService {
     return true;
   }
 
+  /// พาผู้ใช้ไปหน้าตั้งค่าการปลุกตรงเวลาของระบบ แล้วคืนค่าสถานะหลังผู้ใช้กลับมา
+  ///
+  /// ต้องเรียกหลังจากอธิบายเหตุผลให้ผู้ใช้เข้าใจแล้วเท่านั้น เพราะผู้ใช้จะถูกพา
+  /// ออกจากแอปไปหน้าตั้งค่าของระบบโดยไม่มีคำอธิบายใดๆ จากฝั่งระบบเอง
+  Future<bool> requestExactAlarmsPermission() async {
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin == null) return true;
+
+    return await androidPlugin.requestExactAlarmsPermission() ?? false;
+  }
+
+  /// ตรวจว่าแอปได้รับอนุญาตให้แสดงการแจ้งเตือนอยู่หรือไม่
+  Future<bool> areNotificationsEnabled() async {
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin != null) {
+      return await androidPlugin.areNotificationsEnabled() ?? false;
+    }
+
+    final iosPlugin = _plugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    if (iosPlugin != null) {
+      final options = await iosPlugin.checkPermissions();
+      return options?.isEnabled ?? false;
+    }
+
+    return true;
+  }
+
+  /// ตรวจว่าแอปตั้งการปลุกแบบตรงเวลาได้หรือไม่
+  ///
+  /// Android 12 ขึ้นไปมีสิทธิ์นี้แยกต่างหาก และตั้งแต่ Android 14 จะไม่อนุญาต
+  /// ให้อัตโนมัติอีกต่อไป ถ้าไม่ได้รับอนุญาตแล้วยังสั่งปลุกแบบตรงเวลา ปลั๊กอิน
+  /// จะโยน PlatformException ทันที
+  Future<bool> canScheduleExactAlarms() async {
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin == null) return true;
+
+    return await androidPlugin.canScheduleExactNotifications() ?? false;
+  }
+
   /// ตั้งเวลาแจ้งเตือนทานยาหนึ่งมื้อ พร้อมแจ้งเตือนซ้ำอัตโนมัติถ้ายังไม่กดยืนยัน
+  ///
+  /// [useExactAlarm] ให้ส่งผลของ [canScheduleExactAlarms] เข้ามา ผู้เรียกควรถามครั้งเดียว
+  /// ต่อการ sync หนึ่งรอบแล้วส่งต่อ ไม่ต้องถามใหม่ทุกมื้อ
   Future<void> scheduleDoseReminder({
     required String medicationId,
     required DateTime occurrence,
     required String medicationName,
     required String dosage,
     required String quantity,
+    required bool useExactAlarm,
   }) async {
     final primaryId = _idFor(medicationId, occurrence, 'primary');
     final followUpId = _idFor(medicationId, occurrence, 'followup');
@@ -194,6 +249,7 @@ class NotificationService {
       title: 'ถึงเวลาทานยา: $medicationName',
       body: '$dosage · $quantity',
       payload: primaryPayload.encode(),
+      useExactAlarm: useExactAlarm,
     );
     await _scheduleAt(
       id: followUpId,
@@ -201,6 +257,7 @@ class NotificationService {
       title: 'ยังไม่ได้ยืนยันว่าทานยาแล้ว: $medicationName',
       body: '$dosage · $quantity',
       payload: followUpPayload.encode(),
+      useExactAlarm: useExactAlarm,
     );
   }
 
@@ -210,44 +267,76 @@ class NotificationService {
     required String title,
     required String body,
     required String payload,
+    required bool useExactAlarm,
   }) async {
     if (dateTime.isBefore(DateTime.now())) return;
 
     try {
-      await _plugin.zonedSchedule(
+      await _zonedSchedule(
         id: id,
+        dateTime: dateTime,
         title: title,
         body: body,
         payload: payload,
-        scheduledDate: tz.TZDateTime.from(dateTime, tz.local),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        notificationDetails: NotificationDetails(
-          android: AndroidNotificationDetails(
-            ReminderConstants.androidChannelId,
-            ReminderConstants.androidChannelName,
-            channelDescription: ReminderConstants.androidChannelDescription,
-            importance: Importance.high,
-            priority: Priority.high,
-            actions: [
-              const AndroidNotificationAction(
-                ReminderConstants.actionMarkAsTaken,
-                'ทานแล้ว',
-              ),
-              const AndroidNotificationAction(
-                ReminderConstants.actionSnooze,
-                'เลื่อน 15 นาที',
-              ),
-            ],
-          ),
-          iOS: DarwinNotificationDetails(
-            categoryIdentifier: ReminderConstants.darwinCategoryId,
-          ),
-        ),
+        useExactAlarm: useExactAlarm,
       );
-    } catch (error) {
-      // ตั้งเวลาแจ้งเตือนหนึ่งรายการไม่สำเร็จไม่ควรทำให้การ sync ทั้งหมดล้มเหลว
-      debugPrint('ตั้งเวลาแจ้งเตือนไม่สำเร็จ (id: $id): $error');
+    } on PlatformException catch (error) {
+      if (error.code != _exactAlarmsNotPermittedCode) rethrow;
+
+      // สิทธิ์การปลุกตรงเวลาถูกเพิกถอนหลังจากที่ตรวจสอบไปแล้ว (ผู้ใช้ปิดเองระหว่าง
+      // ที่แอปกำลังตั้งเวลาอยู่) ถอยไปใช้การปลุกแบบไม่ตรงเวลาแทน เพราะเตือนช้า
+      // ไปไม่กี่นาทียังดีกว่าไม่เตือนเลย
+      await _zonedSchedule(
+        id: id,
+        dateTime: dateTime,
+        title: title,
+        body: body,
+        payload: payload,
+        useExactAlarm: false,
+      );
     }
+  }
+
+  Future<void> _zonedSchedule({
+    required int id,
+    required DateTime dateTime,
+    required String title,
+    required String body,
+    required String payload,
+    required bool useExactAlarm,
+  }) {
+    return _plugin.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      payload: payload,
+      scheduledDate: tz.TZDateTime.from(dateTime, tz.local),
+      androidScheduleMode: useExactAlarm
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          ReminderConstants.androidChannelId,
+          ReminderConstants.androidChannelName,
+          channelDescription: ReminderConstants.androidChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          actions: [
+            const AndroidNotificationAction(
+              ReminderConstants.actionMarkAsTaken,
+              'ทานแล้ว',
+            ),
+            const AndroidNotificationAction(
+              ReminderConstants.actionSnooze,
+              'เลื่อน 15 นาที',
+            ),
+          ],
+        ),
+        iOS: DarwinNotificationDetails(
+          categoryIdentifier: ReminderConstants.darwinCategoryId,
+        ),
+      ),
+    );
   }
 
   /// ยกเลิกการแจ้งเตือนตาม id
@@ -326,6 +415,7 @@ class NotificationService {
       await _scheduleAt(
         id: snoozeId,
         dateTime: snoozeTime,
+        useExactAlarm: await canScheduleExactAlarms(),
         title: 'ถึงเวลาทานยา (เลื่อนแล้ว): ${payload.medicationName}',
         body: '${payload.dosage} · ${payload.quantity}',
         payload: ReminderPayload(

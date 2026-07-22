@@ -84,6 +84,10 @@ class SyncRemindersUseCase {
     final medicationsById = {for (final m in medications) m.id: m};
     final now = DateTime.now();
 
+    // ตารางหนึ่งตั้งไม่สำเร็จไม่ควรทำให้ตารางที่เหลือไม่ถูกตั้งไปด้วย จึงตั้งต่อจนครบ
+    // แล้วค่อยรายงานข้อผิดพลาดแรกที่เจอ ไม่ปล่อยให้ล้มเหลวแบบเงียบๆ
+    String? scheduleError;
+
     for (final schedule in schedules) {
       if (!schedule.isActive) continue;
       if (schedule.endDate != null && schedule.endDate!.isBefore(now)) {
@@ -92,13 +96,18 @@ class SyncRemindersUseCase {
       final medication = medicationsById[schedule.medicationId];
       if (medication == null) continue;
 
-      await _reminderRepository.scheduleReminders(
+      final scheduleResult = await _reminderRepository.scheduleReminders(
         schedule: schedule,
         medication: medication,
         takenDoseKeys: takenDoseKeys,
       );
+      scheduleResult.when(
+        success: (_) {},
+        failure: (message) => scheduleError ??= message,
+      );
     }
 
+    if (scheduleError != null) return Result.failure(scheduleError!);
     return const Result.success(null);
   }
 }
