@@ -5,10 +5,18 @@ import 'package:go_router/go_router.dart';
 ///
 /// ใช้ร่วมกับ StatefulShellRoute เพื่อคงสถานะของแต่ละแท็บไว้เมื่อสลับไปมา
 class ScaffoldWithNavBar extends StatelessWidget {
-  const ScaffoldWithNavBar({super.key, required this.navigationShell});
+  const ScaffoldWithNavBar({
+    super.key,
+    required this.navigationShell,
+    this.banner,
+  });
 
   /// เชลล์นำทางที่ go_router ส่งมาให้ ใช้รู้แท็บปัจจุบันและสลับแท็บ
   final StatefulNavigationShell navigationShell;
+
+  /// แถบแจ้งเตือนที่แสดงเหนือทุกแท็บ (ถ้ามี) รับมาจากภายนอกเพื่อให้ core ไม่ต้อง
+  /// ผูกกับ Feature ใด Feature หนึ่ง — ผู้ประกอบร่างคือ app_router.dart
+  final Widget? banner;
 
   void _goBranch(int index) {
     navigationShell.goBranch(
@@ -21,7 +29,14 @@ class ScaffoldWithNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      body: banner == null
+          ? navigationShell
+          : Column(
+              children: [
+                SafeArea(bottom: false, child: banner!),
+                Expanded(child: navigationShell),
+              ],
+            ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _goBranch,

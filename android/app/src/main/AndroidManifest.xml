@@ -3,7 +3,15 @@
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <!-- ต้องมีเพื่อให้ปลั๊กอินแจ้งเตือนทราบเมื่อเครื่องรีสตาร์ท และตั้งเวลาแจ้งเตือนใหม่ -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <!-- จำเป็นสำหรับแจ้งเตือนตรงเวลา (exact alarm) เนื่องจากเป็นแอปแจ้งเตือนทานยาที่ต้องตรงเวลา -->
+    <!-- Android 13 ขึ้นไปต้องขอสิทธิ์แสดงการแจ้งเตือนจากผู้ใช้ ประกาศเองให้ชัดเจน
+         แทนการพึ่งการ merge manifest จากปลั๊กอิน -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- จำเป็นสำหรับแจ้งเตือนตรงเวลา (exact alarm) เนื่องจากเป็นแอปแจ้งเตือนทานยาที่ต้องตรงเวลา
+
+         Android 14 (API 34) ขึ้นไปจะไม่อนุญาตสิทธิ์นี้ให้อัตโนมัติอีกต่อไป ผู้ใช้ต้องเปิดเอง
+         ที่ การตั้งค่า > แอป > PillMate > การปลุกและการช่วยเตือน แอปจึงต้องอธิบายเหตุผล
+         แล้วพาผู้ใช้ไปเปิด (ดู ReminderPermissionBanner) และถอยไปใช้การปลุกแบบไม่ตรงเวลา
+         ถ้าผู้ใช้ไม่เปิดให้ -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application
         android:label="Pillmate"

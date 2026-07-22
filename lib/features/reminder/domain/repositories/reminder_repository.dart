@@ -1,12 +1,21 @@
 import '../../../../core/utils/result.dart';
 import '../../../medication/domain/entities/medication.dart';
+import '../entities/reminder_permission_status.dart';
 import '../entities/schedule.dart';
 
 /// Contract ของ Reminder Repository ให้ Domain Layer สั่งจัดการแจ้งเตือนได้
 /// โดยไม่รู้จัก flutter_local_notifications โดยตรง
 abstract class ReminderRepository {
-  /// ขอสิทธิ์การแจ้งเตือนจากผู้ใช้งาน
+  /// ขอสิทธิ์แสดงการแจ้งเตือนจากผู้ใช้งาน (แสดงเป็น dialog ในแอป)
   Future<Result<bool>> requestPermission();
+
+  /// พาผู้ใช้ไปหน้าตั้งค่าการปลุกตรงเวลาของระบบ คืนค่าสถานะหลังผู้ใช้กลับมา
+  ///
+  /// ต้องอธิบายเหตุผลให้ผู้ใช้เข้าใจก่อนเรียกเสมอ เพราะผู้ใช้จะถูกพาออกจากแอป
+  Future<Result<bool>> requestExactAlarmPermission();
+
+  /// อ่านสถานะสิทธิ์ปัจจุบันทั้งหมดที่จำเป็นต่อการแจ้งเตือน
+  Future<Result<ReminderPermissionStatus>> getPermissionStatus();
 
   /// ยกเลิกการแจ้งเตือนทั้งหมดที่ตั้งเวลาไว้
   Future<Result<void>> cancelAllReminders();

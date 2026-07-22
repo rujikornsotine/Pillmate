@@ -227,6 +227,43 @@ void main() {
     );
   });
 
+  test(
+    'ตั้งตารางที่เหลือต่อจนครบแม้ตารางหนึ่งล้มเหลว แล้วคืนค่า failure ไม่เงียบหาย',
+    () async {
+      final failing = buildSchedule();
+      final succeeding = buildSchedule(medicationId: 'med-1');
+      when(
+        () => scheduleRepository.getSchedules(),
+      ).thenAnswer((_) async => Result.success([failing, succeeding]));
+      when(
+        () => medicationRepository.getMedications(),
+      ).thenAnswer((_) async => Result.success([medication]));
+      when(
+        () => reminderRepository.scheduleReminders(
+          schedule: failing,
+          medication: any(named: 'medication'),
+          takenDoseKeys: any(named: 'takenDoseKeys'),
+        ),
+      ).thenAnswer((_) async => const Result.failure('ไม่ได้รับสิทธิ์ปลุกตรงเวลา'));
+
+      final result = await useCase.call();
+
+      expect(result.isFailure, isTrue);
+      result.when(
+        success: (_) => fail('should not succeed'),
+        failure: (message) => expect(message, 'ไม่ได้รับสิทธิ์ปลุกตรงเวลา'),
+      );
+      // ตารางที่เหลือต้องถูกตั้งต่อ ไม่หยุดกลางคัน
+      verify(
+        () => reminderRepository.scheduleReminders(
+          schedule: succeeding,
+          medication: any(named: 'medication'),
+          takenDoseKeys: any(named: 'takenDoseKeys'),
+        ),
+      ).called(1);
+    },
+  );
+
   test('คืนค่า failure ถ้าโหลดตารางยาไม่สำเร็จ และไม่ยกเลิกการแจ้งเตือนเดิม', () async {
     when(
       () => scheduleRepository.getSchedules(),
